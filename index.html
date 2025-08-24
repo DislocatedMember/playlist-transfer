@@ -20,6 +20,12 @@
                 <p class="text-gray-400 mt-2">Transfer your Spotify playlists to YouTube Music seamlessly.</p>
             </header>
 
+            <!-- Error Message Display -->
+            <div id="error-container" class="hidden bg-red-900 border border-red-500 text-red-200 px-4 py-3 rounded-lg relative mb-6" role="alert">
+                <strong class="font-bold">Error: </strong>
+                <span id="error-message" class="block sm:inline"></span>
+            </div>
+
             <main id="main-content">
                 <!-- Step 1: Authentication -->
                 <div id="auth-section">
@@ -78,9 +84,9 @@
     <script>
         // --- CONFIGURATION ---
         // IMPORTANT: You must get your own Client IDs from Spotify and Google.
-        const SPOTIFY_CLIENT_ID = 'f6bfdf6d6a834929a3dfc757836f749b'; 
-        const YOUTUBE_API_KEY = 'AIzaSyBNQ1BKWBMNmjJlazFoX_EQmjlRPzCBVzQ';
-        const YOUTUBE_CLIENT_ID = 'Y445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
+        const SPOTIFY_CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID'; 
+        const YOUTUBE_API_KEY = 'YOUR_YOUTUBE_API_KEY';
+        const YOUTUBE_CLIENT_ID = 'YOUR_YOUTUBE_CLIENT_ID';
 
         const REDIRECT_URI = window.location.origin + window.location.pathname;
 
@@ -101,11 +107,22 @@
         const transferPlaylistName = document.getElementById('transfer-playlist-name');
         const completeMessage = document.getElementById('complete-message');
         const youtubePlaylistLink = document.getElementById('youtube-playlist-link');
+        const errorContainer = document.getElementById('error-container');
+        const errorMessage = document.getElementById('error-message');
 
         // --- STATE ---
         let spotifyAccessToken = null;
         let googleAuth = null;
 
+        // --- ERROR HANDLING ---
+        function displayError(message) {
+            errorMessage.textContent = message;
+            errorContainer.classList.remove('hidden');
+        }
+
+        function clearError() {
+            errorContainer.classList.add('hidden');
+        }
 
         // --- ON PAGE LOAD ---
         window.onload = async () => {
@@ -155,13 +172,15 @@
                 }
             } catch (error) {
                 console.error("Error initializing Google Client:", error);
-                alert("Could not initialize Google API. Please check your API Key and Client ID.");
+                // This is the most likely place for the user's error.
+                displayError("Could not initialize Google API. Please double-check that your API Key and Client ID are correct in the script, and that your authorized URLs are correctly set in the Google Cloud Console.");
             }
         }
 
         spotifyLoginBtn.addEventListener('click', () => {
+            clearError();
             if (SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
-                alert('Please set your Spotify Client ID in the script.');
+                displayError('Please set your Spotify Client ID in the script.');
                 return;
             }
             const scope = 'playlist-read-private playlist-read-collaborative';
@@ -170,8 +189,9 @@
         });
 
         youtubeLoginBtn.addEventListener('click', async () => {
+            clearError();
              if (YOUTUBE_CLIENT_ID === 'YOUR_YOUTUBE_CLIENT_ID' || YOUTUBE_API_KEY === 'YOUR_YOUTUBE_API_KEY') {
-                alert('Please set your YouTube API Key and Client ID in the script.');
+                displayError('Please set your YouTube API Key and Client ID in the script.');
                 return;
             }
             try {
@@ -184,7 +204,7 @@
                 }
             } catch (error) {
                 console.error("Error signing in to Google:", error);
-                alert("There was an error signing in with Google. Please try again.");
+                displayError("There was an error signing in with Google. Please try again.");
             }
         });
 
