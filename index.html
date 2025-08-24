@@ -6,7 +6,8 @@
     <title>Playlist Transfer: Spotify to YouTube Music</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/api.js" async defer></script>
+    <!-- The onload attribute starts the gapi initialization process -->
+    <script src="https://apis.google.com/js/api.js" async defer onload="onGapiLoad()"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -86,9 +87,9 @@
     <script>
         // --- CONFIGURATION ---
         // IMPORTANT: You must get your own Client IDs from Spotify and Google.
-    const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
-const YOUTUBE_API_KEY = 'AIzaSyBNQ1BKWBMNmjJlazFoX_EQmjlRPzCBVzQ';
-const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
+        const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
+        const YOUTUBE_API_KEY = 'AIzaSyBNQ1BKWBMNmjJlazFoX_EQmjlRPzCBVzQ';
+        const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
 
         const REDIRECT_URI = window.location.origin + window.location.pathname;
 
@@ -129,7 +130,7 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
         // --- ON PAGE LOAD ---
         window.onload = () => {
             handleSpotifyRedirect();
-            // Google API is loaded via async defer, no need for a manual loader function
+            // Google API is now loaded via the script tag's onload attribute
         };
 
         // --- AUTHENTICATION ---
@@ -151,7 +152,12 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
             }
         }
         
-        // This function is called when the Google GSI library is loaded
+        // This function is called by the Google API script tag's onload attribute
+        function onGapiLoad() {
+            gapi.load('client', initializeGis);
+        }
+
+        // This function is called when the Google GAPI library is loaded
         function initializeGis() {
             googleTokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: YOUTUBE_CLIENT_ID,
@@ -171,9 +177,6 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
                 },
             });
         }
-        // The gapi.load call is deferred until after we get a token
-        gapi.load('client', initializeGis);
-
 
         spotifyLoginBtn.addEventListener('click', (event) => {
             event.preventDefault(); 
