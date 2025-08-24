@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Playlist Transfer: Spotify to YouTube Music</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -84,9 +86,9 @@
     <script>
         // --- CONFIGURATION ---
         // IMPORTANT: You must get your own Client IDs from Spotify and Google.
-     const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
+    const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
 const YOUTUBE_API_KEY = 'AIzaSyBNQ1BKWBMNmjJlazFoX_EQmjlRPzCBVzQ';
-const YOUTUBE_CLIENT_ID = 'Y445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
+const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
 
         const REDIRECT_URI = window.location.origin + window.location.pathname;
 
@@ -112,7 +114,7 @@ const YOUTUBE_CLIENT_ID = 'Y445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.g
 
         // --- STATE ---
         let spotifyAccessToken = null;
-        let googleAuth = null;
+        let googleTokenClient = null;
 
         // --- ERROR HANDLING ---
         function displayError(message) {
@@ -125,85 +127,61 @@ const YOUTUBE_CLIENT_ID = 'Y445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.g
         }
 
         // --- ON PAGE LOAD ---
-        window.onload = async () => {
+        window.onload = () => {
             handleSpotifyRedirect();
-            loadGoogleApi();
+            // Google API is loaded via async defer, no need for a manual loader function
         };
 
         // --- AUTHENTICATION ---
 
         function handleSpotifyRedirect() {
-            // DEBUG: Log information about the URL when the page loads
-            console.log('Checking for Spotify redirect...');
-            console.log('URL Hash on load:', window.location.hash);
-
             if (window.location.hash) {
                 const params = new URLSearchParams(window.location.hash.substring(1));
                 const token = params.get('access_token');
-                
-                // DEBUG: Log the token we extracted
-                console.log('Parsed token:', token);
-
                 if (token) {
-                    console.log('Token found! Updating UI.');
                     spotifyAccessToken = token;
                     spotifyStatus.textContent = 'Connected!';
                     spotifyStatus.classList.add('text-green-400');
                     spotifyLoginBtn.disabled = true;
                     youtubeLoginBtn.disabled = false;
-                    // Use replaceState to clean the URL without adding to history
                     window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-                } else {
-                    console.log('Hash found, but no access_token parameter inside it.');
+                } else if (params.get('error')) {
+                    displayError(`Spotify login failed: ${params.get('error')}`);
                 }
-            } else {
-                console.log('No hash found in URL. Not a redirect.');
             }
         }
         
-        function loadGoogleApi() {
-            const script = document.createElement('script');
-            script.src = 'https://apis.google.com/js/api.js';
-            script.onload = () => gapi.load('client:auth2', initGoogleClient);
-            document.body.appendChild(script);
-        }
-        
-        async function initGoogleClient() {
-            try {
-                await gapi.client.init({
-                    apiKey: YOUTUBE_API_KEY,
-                    clientId: YOUTUBE_CLIENT_ID,
-                    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"],
-                    scope: 'https://www.googleapis.com/auth/youtube.force-ssl'
-                });
-                googleAuth = gapi.auth2.getAuthInstance();
-                
-                if (googleAuth.isSignedIn.get()) {
-                    youtubeStatus.textContent = 'Connected!';
-                    youtubeStatus.classList.add('text-green-400');
-                    youtubeLoginBtn.disabled = true;
-                    if (spotifyAccessToken) {
-                        showPlaylistSelection();
+        // This function is called when the Google GSI library is loaded
+        function initializeGis() {
+            googleTokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: YOUTUBE_CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/youtube.force-ssl',
+                callback: (tokenResponse) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                        gapi.client.setApiKey(YOUTUBE_API_KEY);
+                        gapi.client.load('youtube', 'v3', () => {
+                             youtubeStatus.textContent = 'Connected!';
+                             youtubeStatus.classList.add('text-green-400');
+                             youtubeLoginBtn.disabled = true;
+                             if (spotifyAccessToken) {
+                                 showPlaylistSelection();
+                             }
+                        });
                     }
-                }
-            } catch (error) {
-                console.error("Error initializing Google Client:", error);
-                // This is the most likely place for the user's error.
-                displayError("Could not initialize Google API. Please double-check that your API Key and Client ID are correct in the script, and that your authorized URLs are correctly set in the Google Cloud Console.");
-            }
+                },
+            });
         }
+        // The gapi.load call is deferred until after we get a token
+        gapi.load('client', initializeGis);
+
 
         spotifyLoginBtn.addEventListener('click', (event) => {
-            // Prevent the default button action (like a page reload)
             event.preventDefault(); 
             clearError();
-            
             if (SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
-                console.error('CRITICAL: Spotify Client ID is not set. Please replace the placeholder value in the script.');
                 displayError('Spotify Client ID is not set. Please add your key to the script file.');
                 return;
             }
-
             const scope = 'playlist-read-private playlist-read-collaborative';
             const authUrl = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(scope)}`;
             window.location.href = authUrl;
@@ -215,17 +193,10 @@ const YOUTUBE_CLIENT_ID = 'Y445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.g
                 displayError('Please set your YouTube API Key and Client ID in the script.');
                 return;
             }
-            try {
-                await googleAuth.signIn();
-                if (googleAuth.isSignedIn.get()) {
-                    youtubeStatus.textContent = 'Connected!';
-                    youtubeStatus.classList.add('text-green-400');
-                    youtubeLoginBtn.disabled = true;
-                    showPlaylistSelection();
-                }
-            } catch (error) {
-                console.error("Error signing in to Google:", error);
-                displayError("There was an error signing in with Google. Please try again.");
+            if (googleTokenClient) {
+                googleTokenClient.requestAccessToken();
+            } else {
+                displayError("Google authentication is not ready. Please wait a moment and try again.");
             }
         });
 
