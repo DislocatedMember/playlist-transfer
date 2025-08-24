@@ -84,9 +84,9 @@
     <script>
         // --- CONFIGURATION ---
         // IMPORTANT: You must get your own Client IDs from Spotify and Google.
-        const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
-        const YOUTUBE_API_KEY = 'AIzaSyBNQ1BKWBMNmjJlazFoX_EQmjlRPzCBVzQ';
-        const YOUTUBE_CLIENT_ID = 'Y445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
+       const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
+const YOUTUBE_API_KEY = 'AIzaSyBNQ1BKWBMNmjJlazFoX_EQmjlRPzCBVzQ';
+const YOUTUBE_CLIENT_ID = 'Y445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
 
         const REDIRECT_URI = window.location.origin + window.location.pathname;
 
@@ -133,15 +133,31 @@
         // --- AUTHENTICATION ---
 
         function handleSpotifyRedirect() {
-            const params = new URLSearchParams(window.location.hash.substring(1));
-            const token = params.get('access_token');
-            if (token) {
-                spotifyAccessToken = token;
-                spotifyStatus.textContent = 'Connected!';
-                spotifyStatus.classList.add('text-green-400');
-                spotifyLoginBtn.disabled = true;
-                youtubeLoginBtn.disabled = false;
-                window.history.pushState("", document.title, window.location.pathname + window.location.search);
+            // DEBUG: Log information about the URL when the page loads
+            console.log('Checking for Spotify redirect...');
+            console.log('URL Hash on load:', window.location.hash);
+
+            if (window.location.hash) {
+                const params = new URLSearchParams(window.location.hash.substring(1));
+                const token = params.get('access_token');
+                
+                // DEBUG: Log the token we extracted
+                console.log('Parsed token:', token);
+
+                if (token) {
+                    console.log('Token found! Updating UI.');
+                    spotifyAccessToken = token;
+                    spotifyStatus.textContent = 'Connected!';
+                    spotifyStatus.classList.add('text-green-400');
+                    spotifyLoginBtn.disabled = true;
+                    youtubeLoginBtn.disabled = false;
+                    // Use replaceState to clean the URL without adding to history
+                    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+                } else {
+                    console.log('Hash found, but no access_token parameter inside it.');
+                }
+            } else {
+                console.log('No hash found in URL. Not a redirect.');
             }
         }
         
@@ -412,5 +428,3 @@
     </script>
 </body>
 </html>
-
-
