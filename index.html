@@ -86,12 +86,10 @@
 
     <script>
         // --- CONFIGURATION ---
-        // IMPORTANT: You must get your own Client IDs from Spotify and Google.
-        const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
+       const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
 const YOUTUBE_API_KEY = 'AIzaSyBNQ1BKWBMNmjJlazFoX_EQmjlRPzCBVzQ';
 const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
 
-        // Hardcoded Redirect URI to prevent any dynamic calculation errors.
         // MAKE SURE THIS EXACT STRING IS IN YOUR SPOTIFY DASHBOARD
         const REDIRECT_URI = 'https://dislocatedmember.github.io/playlist-transfer/';
 
@@ -102,6 +100,9 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
         const youtubeStatus = document.getElementById('youtube-status');
         const authSection = document.getElementById('auth-section');
         const playlistSelectionSection = document.getElementById('playlist-selection-section');
+        const errorContainer = document.getElementById('error-container');
+        const errorMessage = document.getElementById('error-message');
+        // ... other DOM elements
         const playlistList = document.getElementById('playlist-list');
         const transferProgressSection = document.getElementById('transfer-progress-section');
         const transferCompleteSection = document.getElementById('transfer-complete-section');
@@ -112,8 +113,7 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
         const transferPlaylistName = document.getElementById('transfer-playlist-name');
         const completeMessage = document.getElementById('complete-message');
         const youtubePlaylistLink = document.getElementById('youtube-playlist-link');
-        const errorContainer = document.getElementById('error-container');
-        const errorMessage = document.getElementById('error-message');
+
 
         // --- STATE ---
         let spotifyAccessToken = null;
@@ -132,34 +132,117 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
         // --- ON PAGE LOAD ---
         window.onload = () => {
             handleSpotifyRedirect();
-            // Google API is now loaded via the script tag's onload attribute
         };
+        
+        // --- SPOTIFY AUTH (PKCE FLOW) ---
 
-        // --- AUTHENTICATION ---
+        async function handleSpotifyRedirect() {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
 
-        function handleSpotifyRedirect() {
-            if (window.location.hash) {
-                const params = new URLSearchParams(window.location.hash.substring(1));
-                const token = params.get('access_token');
-                if (token) {
+            if (code) {
+                // User has returned from Spotify with an authorization code
+                const codeVerifier = sessionStorage.getItem('spotify_code_verifier');
+                if (!codeVerifier) {
+                    displayError("Could not find code verifier. Please try logging in again.");
+                    return;
+                }
+                
+                try {
+                    const token = await getSpotifyToken(code, codeVerifier);
                     spotifyAccessToken = token;
                     spotifyStatus.textContent = 'Connected!';
                     spotifyStatus.classList.add('text-green-400');
                     spotifyLoginBtn.disabled = true;
                     youtubeLoginBtn.disabled = false;
-                    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-                } else if (params.get('error')) {
-                    displayError(`Spotify login failed: ${params.get('error')}`);
+                    // Clean the URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } catch (error) {
+                    displayError(`Error getting Spotify token: ${error.message}`);
                 }
             }
         }
-        
-        // This function is called by the Google API script tag's onload attribute
+
+        async function getSpotifyToken(code, codeVerifier) {
+            const response = await fetch('https://accounts.spotify.com/api/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    client_id: SPOTIFY_CLIENT_ID,
+                    grant_type: 'authorization_code',
+                    code: code,
+                    redirect_uri: REDIRECT_URI,
+                    code_verifier: codeVerifier,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error_description || 'Failed to fetch token');
+            }
+
+            const data = await response.json();
+            return data.access_token;
+        }
+
+        spotifyLoginBtn.addEventListener('click', async (event) => {
+            event.preventDefault();
+            clearError();
+            if (SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
+                displayError('Spotify Client ID is not set. Please add your key to the script file.');
+                return;
+            }
+
+            // PKCE Code Generator
+            const generateRandomString = (length) => {
+                const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let text = '';
+                for (let i = 0; i < length; i++) {
+                    text += possible.charAt(Math.floor(Math.random() * possible.length));
+                }
+                return text;
+            };
+
+            const sha256 = async (plain) => {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(plain);
+                return window.crypto.subtle.digest('SHA-256', data);
+            };
+
+            const base64encode = (input) => {
+                return btoa(String.fromCharCode(...new Uint8Array(input)))
+                    .replace(/=/g, '')
+                    .replace(/\+/g, '-')
+                    .replace(/\//g, '_');
+            };
+            
+            const codeVerifier = generateRandomString(64);
+            sessionStorage.setItem('spotify_code_verifier', codeVerifier);
+            const hashed = await sha256(codeVerifier);
+            const codeChallenge = base64encode(hashed);
+
+            const scope = 'playlist-read-private playlist-read-collaborative';
+            const authUrl = new URL("https://accounts.spotify.com/authorize");
+            authUrl.search = new URLSearchParams({
+                response_type: 'code',
+                client_id: SPOTIFY_CLIENT_ID,
+                scope: scope,
+                code_challenge_method: 'S256',
+                code_challenge: codeChallenge,
+                redirect_uri: REDIRECT_URI,
+            }).toString();
+            
+            window.location.href = authUrl.toString();
+        });
+
+
+        // --- GOOGLE AUTH ---
         function onGapiLoad() {
             gapi.load('client', initializeGis);
         }
 
-        // This function is called when the Google GAPI library is loaded
         function initializeGis() {
             googleTokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: YOUTUBE_CLIENT_ID,
@@ -180,18 +263,6 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
             });
         }
 
-        spotifyLoginBtn.addEventListener('click', (event) => {
-            event.preventDefault(); 
-            clearError();
-            if (SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
-                displayError('Spotify Client ID is not set. Please add your key to the script file.');
-                return;
-            }
-            const scope = 'playlist-read-private playlist-read-collaborative';
-            const authUrl = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(scope)}`;
-            window.location.href = authUrl;
-        });
-
         youtubeLoginBtn.addEventListener('click', async () => {
             clearError();
              if (YOUTUBE_CLIENT_ID === 'YOUR_YOUTUBE_CLIENT_ID' || YOUTUBE_API_KEY === 'YOUR_YOUTUBE_API_KEY') {
@@ -205,8 +276,7 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
             }
         });
 
-        // --- UI LOGIC ---
-
+        // --- UI LOGIC & API CALLS (Unchanged) ---
         async function showPlaylistSelection() {
             authSection.classList.add('hidden');
             playlistSelectionSection.classList.remove('hidden');
@@ -245,8 +315,6 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
                 button.addEventListener('click', handleTransfer);
             });
         }
-
-        // --- API CALLS ---
 
         async function getSpotifyPlaylists(url = 'https://api.spotify.com/v1/me/playlists?limit=50') {
             const response = await fetch(url, {
@@ -319,15 +387,12 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
             return response.result;
         }
 
-        // --- TRANSFER LOGIC ---
-
         async function handleTransfer(event) {
             const button = event.currentTarget;
             const playlistId = button.dataset.playlistId;
             const playlistName = button.dataset.playlistName;
             const playlistDescription = button.dataset.playlistDescription;
 
-            // Show progress view
             playlistSelectionSection.classList.add('hidden');
             transferProgressSection.classList.remove('hidden');
             transferPlaylistName.textContent = `Playlist: ${playlistName}`;
@@ -339,18 +404,15 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
             let failedTransfers = 0;
 
             try {
-                // 1. Get Spotify tracks
                 addLog('Fetching tracks from Spotify...');
                 const tracks = await getSpotifyPlaylistTracks(playlistId);
                 const totalTracks = tracks.length;
                 addLog(`Found ${totalTracks} tracks.`);
 
-                // 2. Create YouTube playlist
                 addLog(`Creating YouTube playlist "${playlistName}"...`);
                 const youtubePlaylist = await createYouTubePlaylist(playlistName, playlistDescription);
                 addLog(`YouTube playlist created! ID: ${youtubePlaylist.id}`);
 
-                // 3. Search and add each track
                 for (let i = 0; i < totalTracks; i++) {
                     const track = tracks[i];
                     const query = `${track.name} ${track.artist}`;
@@ -375,7 +437,6 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
                     progressBar.style.width = `${((i + 1) / totalTracks) * 100}%`;
                 }
                 
-                // 4. Show complete screen
                 showCompleteScreen(youtubePlaylist.id, successfulTransfers, failedTransfers);
 
             } catch (error) {
@@ -390,7 +451,7 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
             p.textContent = message;
             p.className = colorClass;
             transferLog.appendChild(p);
-            transferLog.scrollTop = transferLog.scrollHeight; // Auto-scroll
+            transferLog.scrollTop = transferLog.scrollHeight;
         }
 
         function showCompleteScreen(playlistId, successCount, failCount) {
