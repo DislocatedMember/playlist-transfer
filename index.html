@@ -84,9 +84,9 @@
     <script>
         // --- CONFIGURATION ---
         // IMPORTANT: You must get your own Client IDs from Spotify and Google.
-       const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
+     const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
 const YOUTUBE_API_KEY = 'AIzaSyBNQ1BKWBMNmjJlazFoX_EQmjlRPzCBVzQ';
-const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
+const YOUTUBE_CLIENT_ID = 'Y445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
 
         const REDIRECT_URI = window.location.origin + window.location.pathname;
 
@@ -193,12 +193,17 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
             }
         }
 
-        spotifyLoginBtn.addEventListener('click', () => {
+        spotifyLoginBtn.addEventListener('click', (event) => {
+            // Prevent the default button action (like a page reload)
+            event.preventDefault(); 
             clearError();
+            
             if (SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
-                displayError('Please set your Spotify Client ID in the script.');
+                console.error('CRITICAL: Spotify Client ID is not set. Please replace the placeholder value in the script.');
+                displayError('Spotify Client ID is not set. Please add your key to the script file.');
                 return;
             }
+
             const scope = 'playlist-read-private playlist-read-collaborative';
             const authUrl = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(scope)}`;
             window.location.href = authUrl;
@@ -428,4 +433,3 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
     </script>
 </body>
 </html>
-
