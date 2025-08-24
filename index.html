@@ -14,106 +14,14 @@
             font-family: 'Inter', sans-serif;
         }
     </style>
-</head>
-<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
-    <div class="container mx-auto p-4 md:p-8 max-w-3xl w-full">
-        <div class="bg-gray-800 rounded-2xl shadow-2xl p-6 md-p-10">
-            <header class="text-center mb-8">
-                <h1 class="text-4xl font-bold text-green-400">Playlist Porter</h1>
-                <p class="text-gray-400 mt-2">Transfer your Spotify playlists to YouTube Music seamlessly.</p>
-            </header>
-
-            <!-- Error Message Display -->
-            <div id="error-container" class="hidden bg-red-900 border border-red-500 text-red-200 px-4 py-3 rounded-lg relative mb-6" role="alert">
-                <strong class="font-bold">Error: </strong>
-                <span id="error-message" class="block sm:inline"></span>
-            </div>
-
-            <main id="main-content">
-                <!-- Step 1: Authentication -->
-                <div id="auth-section">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div id="spotify-auth" class="bg-gray-700 p-6 rounded-xl flex flex-col items-center justify-center">
-                            <h2 class="text-2xl font-semibold mb-4">Step 1: Connect Spotify</h2>
-                            <button id="spotify-login-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 w-full">
-                                Login with Spotify
-                            </button>
-                            <p id="spotify-status" class="mt-4 text-sm text-gray-400">Not connected.</p>
-                        </div>
-                        <div id="youtube-auth" class="bg-gray-700 p-6 rounded-xl flex flex-col items-center justify-center">
-                            <h2 class="text-2xl font-semibold mb-4">Step 2: Connect YouTube</h2>
-                            <button id="youtube-login-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 w-full" disabled>
-                                Login with YouTube
-                            </button>
-                             <p id="youtube-status" class="mt-4 text-sm text-gray-400">Not connected.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step 2: Select Playlist -->
-                <div id="playlist-selection-section" class="hidden mt-8">
-                    <h2 class="text-2xl font-semibold mb-4 text-center">Step 3: Choose a Playlist to Transfer</h2>
-                    <div id="playlist-list" class="max-h-96 overflow-y-auto bg-gray-700 p-4 rounded-xl space-y-3">
-                        <!-- Playlists will be dynamically inserted here -->
-                    </div>
-                </div>
-
-                <!-- Step 3: Transfer Progress -->
-                <div id="transfer-progress-section" class="hidden mt-8 text-center">
-                    <h2 class="text-2xl font-semibold mb-2">Transferring...</h2>
-                    <p id="transfer-playlist-name" class="text-gray-400 mb-4"></p>
-                    <div class="w-full bg-gray-700 rounded-full h-4 mb-4">
-                        <div id="progress-bar" class="bg-blue-500 h-4 rounded-full" style="width: 0%"></div>
-                    </div>
-                    <p id="progress-text" class="text-sm text-gray-300">Initializing...</p>
-                    <div id="transfer-log" class="mt-4 text-left bg-gray-800 p-4 rounded-lg max-h-60 overflow-y-auto text-sm">
-                        <!-- Log messages will appear here -->
-                    </div>
-                </div>
-                 <!-- Step 4: Transfer Complete -->
-                <div id="transfer-complete-section" class="hidden mt-8 text-center">
-                    <h2 class="text-2xl font-semibold mb-2 text-green-400">Transfer Complete!</h2>
-                    <p id="complete-message" class="text-gray-300 mb-4"></p>
-                    <a id="youtube-playlist-link" href="#" target="_blank" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg inline-block">View on YouTube Music</a>
-                    <button id="start-over-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg ml-4">Start New Transfer</button>
-                </div>
-            </main>
-        </div>
-        <footer class="text-center mt-6 text-gray-500 text-sm">
-            <p>Disclaimer: This tool is not affiliated with Spotify or YouTube.</p>
-        </footer>
-    </div>
-
     <script>
         // --- CONFIGURATION ---
-       const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
+  const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
 const YOUTUBE_API_KEY = 'AIzaSyBNQ1BKWBMNmjJlazFoX_EQmjlRPzCBVzQ';
 const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
 
         // MAKE SURE THIS EXACT STRING IS IN YOUR SPOTIFY DASHBOARD
-        const REDIRECT_URI = 'https://dislocatedmember.github.io/playlist-transfer';
-
-        // --- DOM ELEMENTS ---
-        const spotifyLoginBtn = document.getElementById('spotify-login-btn');
-        const youtubeLoginBtn = document.getElementById('youtube-login-btn');
-        const spotifyStatus = document.getElementById('spotify-status');
-        const youtubeStatus = document.getElementById('youtube-status');
-        const authSection = document.getElementById('auth-section');
-        const playlistSelectionSection = document.getElementById('playlist-selection-section');
-        const errorContainer = document.getElementById('error-container');
-        const errorMessage = document.getElementById('error-message');
-        // ... other DOM elements
-        const playlistList = document.getElementById('playlist-list');
-        const transferProgressSection = document.getElementById('transfer-progress-section');
-        const transferCompleteSection = document.getElementById('transfer-complete-section');
-        const progressBar = document.getElementById('progress-bar');
-        const progressText = document.getElementById('progress-text');
-        const transferLog = document.getElementById('transfer-log');
-        const startOverBtn = document.getElementById('start-over-btn');
-        const transferPlaylistName = document.getElementById('transfer-playlist-name');
-        const completeMessage = document.getElementById('complete-message');
-        const youtubePlaylistLink = document.getElementById('youtube-playlist-link');
-
+        const REDIRECT_URI = 'https://dislocatedmember.github.io/playlist-transfer/';
 
         // --- STATE ---
         let spotifyAccessToken = null;
@@ -121,20 +29,18 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
 
         // --- ERROR HANDLING ---
         function displayError(message) {
+            const errorContainer = document.getElementById('error-container');
+            const errorMessage = document.getElementById('error-message');
             errorMessage.textContent = message;
             errorContainer.classList.remove('hidden');
         }
 
         function clearError() {
+            const errorContainer = document.getElementById('error-container');
             errorContainer.classList.add('hidden');
         }
-
-        // --- ON PAGE LOAD ---
-        window.onload = () => {
-            handleSpotifyRedirect();
-        };
         
-        // --- SPOTIFY AUTH (PKCE FLOW) ---
+        // --- AUTHENTICATION ---
 
         async function handleSpotifyRedirect() {
             const params = new URLSearchParams(window.location.search);
@@ -151,10 +57,10 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
                 try {
                     const token = await getSpotifyToken(code, codeVerifier);
                     spotifyAccessToken = token;
-                    spotifyStatus.textContent = 'Connected!';
-                    spotifyStatus.classList.add('text-green-400');
-                    spotifyLoginBtn.disabled = true;
-                    youtubeLoginBtn.disabled = false;
+                    document.getElementById('spotify-status').textContent = 'Connected!';
+                    document.getElementById('spotify-status').classList.add('text-green-400');
+                    document.getElementById('spotify-login-btn').disabled = true;
+                    document.getElementById('youtube-login-btn').disabled = false;
                     // Clean the URL
                     window.history.replaceState({}, document.title, window.location.pathname);
                 } catch (error) {
@@ -187,57 +93,6 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
             return data.access_token;
         }
 
-        spotifyLoginBtn.addEventListener('click', async (event) => {
-            event.preventDefault();
-            clearError();
-            if (SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
-                displayError('Spotify Client ID is not set. Please add your key to the script file.');
-                return;
-            }
-
-            // PKCE Code Generator
-            const generateRandomString = (length) => {
-                const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                let text = '';
-                for (let i = 0; i < length; i++) {
-                    text += possible.charAt(Math.floor(Math.random() * possible.length));
-                }
-                return text;
-            };
-
-            const sha256 = async (plain) => {
-                const encoder = new TextEncoder();
-                const data = encoder.encode(plain);
-                return window.crypto.subtle.digest('SHA-256', data);
-            };
-
-            const base64encode = (input) => {
-                return btoa(String.fromCharCode(...new Uint8Array(input)))
-                    .replace(/=/g, '')
-                    .replace(/\+/g, '-')
-                    .replace(/\//g, '_');
-            };
-            
-            const codeVerifier = generateRandomString(64);
-            sessionStorage.setItem('spotify_code_verifier', codeVerifier);
-            const hashed = await sha256(codeVerifier);
-            const codeChallenge = base64encode(hashed);
-
-            const scope = 'playlist-read-private playlist-read-collaborative';
-            const authUrl = new URL("https://accounts.spotify.com/authorize");
-            authUrl.search = new URLSearchParams({
-                response_type: 'code',
-                client_id: SPOTIFY_CLIENT_ID,
-                scope: scope,
-                code_challenge_method: 'S256',
-                code_challenge: codeChallenge,
-                redirect_uri: REDIRECT_URI,
-            }).toString();
-            
-            window.location.href = authUrl.toString();
-        });
-
-
         // --- GOOGLE AUTH ---
         function onGapiLoad() {
             gapi.load('client', initializeGis);
@@ -251,9 +106,9 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
                     if (tokenResponse && tokenResponse.access_token) {
                         gapi.client.setApiKey(YOUTUBE_API_KEY);
                         gapi.client.load('youtube', 'v3', () => {
-                             youtubeStatus.textContent = 'Connected!';
-                             youtubeStatus.classList.add('text-green-400');
-                             youtubeLoginBtn.disabled = true;
+                             document.getElementById('youtube-status').textContent = 'Connected!';
+                             document.getElementById('youtube-status').classList.add('text-green-400');
+                             document.getElementById('youtube-login-btn').disabled = true;
                              if (spotifyAccessToken) {
                                  showPlaylistSelection();
                              }
@@ -263,35 +118,23 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
             });
         }
 
-        youtubeLoginBtn.addEventListener('click', async () => {
-            clearError();
-             if (YOUTUBE_CLIENT_ID === 'YOUR_YOUTUBE_CLIENT_ID' || YOUTUBE_API_KEY === 'YOUR_YOUTUBE_API_KEY') {
-                displayError('Please set your YouTube API Key and Client ID in the script.');
-                return;
-            }
-            if (googleTokenClient) {
-                googleTokenClient.requestAccessToken();
-            } else {
-                displayError("Google authentication is not ready. Please wait a moment and try again.");
-            }
-        });
-
-        // --- UI LOGIC & API CALLS (Unchanged) ---
+        // --- UI LOGIC & API CALLS ---
         async function showPlaylistSelection() {
-            authSection.classList.add('hidden');
-            playlistSelectionSection.classList.remove('hidden');
-            playlistList.innerHTML = '<p>Loading playlists...</p>';
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('playlist-selection-section').classList.remove('hidden');
+            document.getElementById('playlist-list').innerHTML = '<p>Loading playlists...</p>';
 
             try {
                 const playlists = await getSpotifyPlaylists();
                 renderPlaylists(playlists);
             } catch (error) {
                 console.error("Error fetching Spotify playlists:", error);
-                playlistList.innerHTML = '<p class="text-red-400">Could not load playlists. Your Spotify session might have expired. Please refresh and log in again.</p>';
+                document.getElementById('playlist-list').innerHTML = '<p class="text-red-400">Could not load playlists. Your Spotify session might have expired. Please refresh and log in again.</p>';
             }
         }
 
         function renderPlaylists(playlists) {
+            const playlistList = document.getElementById('playlist-list');
             if (!playlists || playlists.length === 0) {
                 playlistList.innerHTML = '<p>No playlists found.</p>';
                 return;
@@ -393,12 +236,12 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
             const playlistName = button.dataset.playlistName;
             const playlistDescription = button.dataset.playlistDescription;
 
-            playlistSelectionSection.classList.add('hidden');
-            transferProgressSection.classList.remove('hidden');
-            transferPlaylistName.textContent = `Playlist: ${playlistName}`;
-            transferLog.innerHTML = '';
-            progressBar.style.width = '0%';
-            progressText.textContent = 'Initializing...';
+            document.getElementById('playlist-selection-section').classList.add('hidden');
+            document.getElementById('transfer-progress-section').classList.remove('hidden');
+            document.getElementById('transfer-playlist-name').textContent = `Playlist: ${playlistName}`;
+            document.getElementById('transfer-log').innerHTML = '';
+            document.getElementById('progress-bar').style.width = '0%';
+            document.getElementById('progress-text').textContent = 'Initializing...';
             
             let successfulTransfers = 0;
             let failedTransfers = 0;
@@ -417,7 +260,7 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
                     const track = tracks[i];
                     const query = `${track.name} ${track.artist}`;
                     
-                    progressText.textContent = `(${i + 1}/${totalTracks}) Searching for: ${query}`;
+                    document.getElementById('progress-text').textContent = `(${i + 1}/${totalTracks}) Searching for: ${query}`;
                     
                     try {
                         const searchResult = await searchYouTube(query);
@@ -434,7 +277,7 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
                         failedTransfers++;
                     }
 
-                    progressBar.style.width = `${((i + 1) / totalTracks) * 100}%`;
+                    document.getElementById('progress-bar').style.width = `${((i + 1) / totalTracks) * 100}%`;
                 }
                 
                 showCompleteScreen(youtubePlaylist.id, successfulTransfers, failedTransfers);
@@ -442,11 +285,12 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
             } catch (error) {
                 console.error("Transfer failed:", error);
                 addLog(`A fatal error occurred: ${error.message}`, 'text-red-500 font-bold');
-                progressText.textContent = 'Transfer failed!';
+                document.getElementById('progress-text').textContent = 'Transfer failed!';
             }
         }
         
         function addLog(message, colorClass = 'text-gray-300') {
+            const transferLog = document.getElementById('transfer-log');
             const p = document.createElement('p');
             p.textContent = message;
             p.className = colorClass;
@@ -455,19 +299,153 @@ const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.go
         }
 
         function showCompleteScreen(playlistId, successCount, failCount) {
-            transferProgressSection.classList.add('hidden');
-            transferCompleteSection.classList.remove('hidden');
+            document.getElementById('transfer-progress-section').classList.add('hidden');
+            document.getElementById('transfer-complete-section').classList.remove('hidden');
             
-            completeMessage.textContent = `Successfully transferred ${successCount} tracks. ${failCount} tracks could not be found.`;
-            youtubePlaylistLink.href = `https://music.youtube.com/playlist?list=${playlistId}`;
+            document.getElementById('complete-message').textContent = `Successfully transferred ${successCount} tracks. ${failCount} tracks could not be found.`;
+            document.getElementById('youtube-playlist-link').href = `https://music.youtube.com/playlist?list=${playlistId}`;
         }
         
-        startOverBtn.addEventListener('click', () => {
-            transferCompleteSection.classList.add('hidden');
-            showPlaylistSelection();
-        });
+        // --- ON PAGE LOAD & EVENT LISTENERS ---
+        window.onload = () => {
+            handleSpotifyRedirect();
 
+            document.getElementById('spotify-login-btn').addEventListener('click', async (event) => {
+                event.preventDefault();
+                clearError();
+                if (SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
+                    displayError('Spotify Client ID is not set. Please add your key to the script file.');
+                    return;
+                }
+
+                const generateRandomString = (length) => {
+                    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                    let text = '';
+                    for (let i = 0; i < length; i++) {
+                        text += possible.charAt(Math.floor(Math.random() * possible.length));
+                    }
+                    return text;
+                };
+
+                const sha256 = async (plain) => {
+                    const encoder = new TextEncoder();
+                    const data = encoder.encode(plain);
+                    return window.crypto.subtle.digest('SHA-256', data);
+                };
+
+                const base64encode = (input) => {
+                    return btoa(String.fromCharCode(...new Uint8Array(input)))
+                        .replace(/=/g, '')
+                        .replace(/\+/g, '-')
+                        .replace(/\//g, '_');
+                };
+                
+                const codeVerifier = generateRandomString(64);
+                sessionStorage.setItem('spotify_code_verifier', codeVerifier);
+                const hashed = await sha256(codeVerifier);
+                const codeChallenge = base64encode(hashed);
+
+                const scope = 'playlist-read-private playlist-read-collaborative';
+                const authUrl = new URL("https://accounts.spotify.com/authorize");
+                authUrl.search = new URLSearchParams({
+                    response_type: 'code',
+                    client_id: SPOTIFY_CLIENT_ID,
+                    scope: scope,
+                    code_challenge_method: 'S256',
+                    code_challenge: codeChallenge,
+                    redirect_uri: REDIRECT_URI,
+                }).toString();
+                
+                window.location.href = authUrl.toString();
+            });
+
+            document.getElementById('youtube-login-btn').addEventListener('click', async () => {
+                clearError();
+                 if (YOUTUBE_CLIENT_ID === 'YOUR_YOUTUBE_CLIENT_ID' || YOUTUBE_API_KEY === 'YOUR_YOUTUBE_API_KEY') {
+                    displayError('Please set your YouTube API Key and Client ID in the script.');
+                    return;
+                }
+                if (googleTokenClient) {
+                    googleTokenClient.requestAccessToken();
+                } else {
+                    displayError("Google authentication is not ready. Please wait a moment and try again.");
+                }
+            });
+
+            document.getElementById('start-over-btn').addEventListener('click', () => {
+                document.getElementById('transfer-complete-section').classList.add('hidden');
+                showPlaylistSelection();
+            });
+        };
     </script>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+    <div class="container mx-auto p-4 md:p-8 max-w-3xl w-full">
+        <div class="bg-gray-800 rounded-2xl shadow-2xl p-6 md-p-10">
+            <header class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-green-400">Playlist Porter</h1>
+                <p class="text-gray-400 mt-2">Transfer your Spotify playlists to YouTube Music seamlessly.</p>
+            </header>
+
+            <!-- Error Message Display -->
+            <div id="error-container" class="hidden bg-red-900 border border-red-500 text-red-200 px-4 py-3 rounded-lg relative mb-6" role="alert">
+                <strong class="font-bold">Error: </strong>
+                <span id="error-message" class="block sm:inline"></span>
+            </div>
+
+            <main id="main-content">
+                <!-- Step 1: Authentication -->
+                <div id="auth-section">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div id="spotify-auth" class="bg-gray-700 p-6 rounded-xl flex flex-col items-center justify-center">
+                            <h2 class="text-2xl font-semibold mb-4">Step 1: Connect Spotify</h2>
+                            <button id="spotify-login-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 w-full">
+                                Login with Spotify
+                            </button>
+                            <p id="spotify-status" class="mt-4 text-sm text-gray-400">Not connected.</p>
+                        </div>
+                        <div id="youtube-auth" class="bg-gray-700 p-6 rounded-xl flex flex-col items-center justify-center">
+                            <h2 class="text-2xl font-semibold mb-4">Step 2: Connect YouTube</h2>
+                            <button id="youtube-login-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 w-full" disabled>
+                                Login with YouTube
+                            </button>
+                             <p id="youtube-status" class="mt-4 text-sm text-gray-400">Not connected.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Select Playlist -->
+                <div id="playlist-selection-section" class="hidden mt-8">
+                    <h2 class="text-2xl font-semibold mb-4 text-center">Step 3: Choose a Playlist to Transfer</h2>
+                    <div id="playlist-list" class="max-h-96 overflow-y-auto bg-gray-700 p-4 rounded-xl space-y-3">
+                        <!-- Playlists will be dynamically inserted here -->
+                    </div>
+                </div>
+
+                <!-- Step 3: Transfer Progress -->
+                <div id="transfer-progress-section" class="hidden mt-8 text-center">
+                    <h2 class="text-2xl font-semibold mb-2">Transferring...</h2>
+                    <p id="transfer-playlist-name" class="text-gray-400 mb-4"></p>
+                    <div class="w-full bg-gray-700 rounded-full h-4 mb-4">
+                        <div id="progress-bar" class="bg-blue-500 h-4 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p id="progress-text" class="text-sm text-gray-300">Initializing...</p>
+                    <div id="transfer-log" class="mt-4 text-left bg-gray-800 p-4 rounded-lg max-h-60 overflow-y-auto text-sm">
+                        <!-- Log messages will appear here -->
+                    </div>
+                </div>
+                 <!-- Step 4: Transfer Complete -->
+                <div id="transfer-complete-section" class="hidden mt-8 text-center">
+                    <h2 class="text-2xl font-semibold mb-2 text-green-400">Transfer Complete!</h2>
+                    <p id="complete-message" class="text-gray-300 mb-4"></p>
+                    <a id="youtube-playlist-link" href="#" target="_blank" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg inline-block">View on YouTube Music</a>
+                    <button id="start-over-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg ml-4">Start New Transfer</button>
+                </div>
+            </main>
+        </div>
+        <footer class="text-center mt-6 text-gray-500 text-sm">
+            <p>Disclaimer: This tool is not affiliated with Spotify or YouTube.</p>
+        </footer>
+    </div>
 </body>
 </html>
-
