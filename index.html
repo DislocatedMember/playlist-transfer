@@ -17,7 +17,7 @@
 </head>
 <body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
     <div class="container mx-auto p-4 md:p-8 max-w-3xl w-full">
-        <div class="bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-10">
+        <div class="bg-gray-800 rounded-2xl shadow-2xl p-6 md-p-10">
             <header class="text-center mb-8">
                 <h1 class="text-4xl font-bold text-green-400">Playlist Porter</h1>
                 <p class="text-gray-400 mt-2">Transfer your Spotify playlists to YouTube Music seamlessly.</p>
@@ -88,10 +88,12 @@
         // --- CONFIGURATION ---
         // IMPORTANT: You must get your own Client IDs from Spotify and Google.
         const SPOTIFY_CLIENT_ID = '3e15d2c4e7d445f8af6415551e023b47'; 
-        const YOUTUBE_API_KEY = 'AIzaSyBNQ1BKWBMNmjJlazFoX_EQmjlRPzCBVzQ';
-        const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
+const YOUTUBE_API_KEY = 'AIzaSyBNQ1BKWBMNmjJlazFoX_EQmjlRPzCBVzQ';
+const YOUTUBE_CLIENT_ID = '445292307504-moli317tov55j704jlabrb9psvhc7ep5.apps.googleusercontent.com';
 
-        const REDIRECT_URI = window.location.origin + window.location.pathname;
+        // Hardcoded Redirect URI to prevent any dynamic calculation errors.
+        // MAKE SURE THIS EXACT STRING IS IN YOUR SPOTIFY DASHBOARD
+        const REDIRECT_URI = 'https://dislocatedmember.github.io/playlist-transfer/';
 
         // --- DOM ELEMENTS ---
         const spotifyLoginBtn = document.getElementById('spotify-login-btn');
